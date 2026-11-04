@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>综测核算</title>
+<style>
+  :root {
+    --bg: #f3f5f8;
+    --card: #fff;
+    --ink: #303133;
+    --text: #606266;
+    --muted: #909399;
+    --line: #ebeef5;
+    --blue: #3b6ff0;
+    --blue-soft: #ecf2fe;
+    --danger: #e85d5d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  .layout { display: flex; min-height: 100vh; }
+  aside { width: 220px; flex: none; background: #fff; border-right: 1px solid #eef0f3; }
+  .menu-label { margin: 0; padding: 18px 24px 8px; color: var(--muted); font-size: 13px; }
+  nav { display: flex; flex-direction: column; gap: 4px; padding: 4px 12px 16px; }
+  nav button { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 12px; padding: 10px 14px; cursor: pointer; color: var(--ink); transition: background .18s ease, color .18s ease; }
+  nav button svg { width: 16px; height: 16px; flex: none; }
+  nav button.on { background: var(--blue); color: #fff; }
+  nav button:not(.on):hover { background: #f5f7fa; }
+  .workspace { flex: 1; min-width: 0; padding: 16px 20px 24px; }
+  .page-head { display: flex; align-items: center; gap: 14px; min-height: 36px; margin-bottom: 14px; }
+  h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  .crumb { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .crumb svg { width: 14px; height: 14px; }
+  .who { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  select, input[type="text"], input[type="file"] { height: 32px; background: #fff; border: 1px solid #dcdfe6; border-radius: 4px; padding: 0 10px; }
+  input[type="text"] { width: 168px; }
+  #newGpa { width: 88px; }
+  input[type="file"] { width: auto; height: auto; padding: 0; border: 0; background: transparent; }
+  input[type="file"]::file-selector-button { height: 32px; margin-right: 10px; padding: 0 16px; border: 1px solid #dcdfe6; border-radius: 16px; background: #fff; color: var(--text); font: inherit; cursor: pointer; transition: border-color .18s ease, background .18s ease; }
+  input[type="file"]::file-selector-button:hover { border-color: #c0c4cc; background: #fafafa; }
+  .toolbar label { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+  button.primary, button.text { height: 32px; border-radius: 16px; padding: 0 16px; cursor: pointer; transition: background .18s ease, box-shadow .18s ease, border-color .18s ease, color .18s ease; }
+  button.primary { background: var(--blue); color: #fff; border: 0; box-shadow: 0 2px 6px rgba(59, 111, 240, .28); }
+  button.primary:hover { background: #2f62e0; }
+  button.primary:disabled { opacity: .45; box-shadow: none; cursor: default; }
+  button.text { background: #fff; color: var(--text); border: 1px solid #dcdfe6; }
+  button.text:hover { border-color: #c0c4cc; color: var(--ink); background: #fafafa; }
+  button.link { height: 28px; border-radius: 14px; padding: 0 12px; background: var(--blue-soft); color: var(--blue); border: 0; cursor: pointer; transition: background .18s ease; }
+  button.link:hover { background: #dce7fd; }
+  button.link.danger { background: #fdeeee; color: var(--danger); }
+  button.link.danger:hover { background: #fadada; }
+  .card { background: var(--card); border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 21, 41, .05); padding: 4px 16px 12px; overflow-x: auto; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 0; }
+  .toolbar + .toolbar { padding-top: 0; }
+  .checks { color: var(--text); }
+  .checks label { display: inline-flex; align-items: center; gap: 6px; }
+  .stat { color: var(--text); }
+  .stat b { color: var(--ink); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 13px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 500; background: #fafafa; }
+  td { color: var(--text); }
+  td.ops { white-space: nowrap; }
+  td.ops select { height: 30px; margin-right: 4px; }
+  .status { color: var(--blue); }
+  .danger { color: var(--danger); }
+  .empty { text-align: center; color: var(--muted); padding: 28px 10px; }
+  .search { width: min(280px, 100%); }
+  .pager { display: flex; align-items: center; gap: 12px; padding: 14px 2px 4px; color: var(--muted); font-size: 13px; }
+  .pager select { width: 72px; color: var(--text); }
+  .pg-btns { margin-left: auto; display: flex; gap: 8px; }
+  .pg { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e4e7ed; background: #fff; color: var(--text); cursor: pointer; transition: background .18s ease, border-color .18s ease, color .18s ease; }
+  .pg:not(:disabled):not(.on):hover { border-color: var(--blue); color: var(--blue); }
+  .pg.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(59, 111, 240, .28); }
+  .pg:disabled { opacity: .4; cursor: default; }
+  .rule { color: var(--text); }
+  @media (max-width: 760px) {
+    .layout { flex-direction: column; }
+    aside { width: 100%; border-right: 0; border-bottom: 1px solid var(--line); }
+    .menu-label { padding: 12px 16px 0; }
+    nav { flex-direction: row; flex-wrap: wrap; padding: 8px 12px; }
+    nav button { width: auto; padding: 8px 12px; }
+    .workspace { padding: 12px; }
+    .page-head { flex-wrap: wrap; }
+    .who { width: 100%; margin-left: 0; flex-wrap: wrap; }
+    .card { padding: 4px 12px 12px; }
+    th, td { white-space: nowrap; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <p class="menu-label">主菜单</p>
+    <nav id="nav"></nav>
+  </aside>
+  <section class="workspace">
+    <div class="page-head">
+      <h1 id="pageTitle">绩点</h1>
+      <div class="crumb" id="crumb"></div>
+      <div class="who">
+        <select id="role"></select>
+        <select id="stu"></select>
+        <button id="reset" class="text" type="button">重置</button>
+      </div>
+    </div>
+    <div class="card" id="main"></div>
+  </section>
+</div>
+<script src="data.js"></script>
+<script src="score.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
